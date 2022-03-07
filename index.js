@@ -12,7 +12,7 @@ async function loadIbLocalhost (params = {}) {
 	let forceDownload = params.forceDownload || false;
 	const defaultUrl    = params.defaultUrl || 'https://download2.interactivebrokers.com/portal/clientportal.gw.zip';
 	const showMessages  = params.showMessages || false;
-	const redownloadDays  = 7;
+	const redownloadDays  = params.redownloadDays || 7;
 	// https://interactivebrokers.github.io/cpwebapi/
 	// At first, download gateway files
 	const tempDir = os.tmpdir ();
