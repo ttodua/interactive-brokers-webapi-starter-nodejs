@@ -2,7 +2,12 @@ This [nodejs module](https://www.npmjs.com/package/ibkr-webapi-bridge) is just a
 
 # Install
 `npm i ibkr-webapi-bridge`
-# Usage
+
+# Quick-Run
+To run out-of-the-box, after installation, execute: `npm run serve`.
+
+# Examples
+You can use in your scripts:
 ```
 const ibBridge = require ('ibkr-webapi-bridge');
 ib.serve();

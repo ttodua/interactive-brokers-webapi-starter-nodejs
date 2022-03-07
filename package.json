@@ -1,6 +1,6 @@
 {
   "name": "ibkr-webapi-bridge",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "interactive-brokers-webapi-nodejs",
   "main": "index.js",
   "scripts": {
