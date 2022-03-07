@@ -51,6 +51,7 @@ async function loadIbLocalhost (params = {}) {
 	const success_text = 'Client login succeeds';
 	const connection_refusal_text = 'connect ECONNREFUSED 127.0.0.1:5000';
 	const interval = 60;
+	
 	const fetchCustom = async function (url) {
 		return new Promise ((resolve, reject) => {
 			try {
@@ -75,21 +76,26 @@ async function loadIbLocalhost (params = {}) {
 			}
 		}); // .catch( function(ex) { console.log(ex); });
 	};
+	
 	const start_server = async function () {
 		let cmd = '';
-		const path = ibkrGatewayDir;
+		let path = ibkrGatewayDir;
 		if (process.platform === 'win32') {
-			cmd = 'cd "'+path+'" && bin\\run.bat root\\conf.yaml';
+			//path = path.replace(/\\/g,'\\\\');
+			cmd = 'cd /d '+path+` && bin\\run.bat root\\conf.yaml`;
 		} else {
-			cmd = '';
+			cmd = 'cd "'+path+'" && bin\\run.sh root\\conf.yaml';
 		}
 		await cp.exec (cmd, (error, stdout, stderr) => {
-			console.log ('--------');
+			console.log ('CMD:error');
 			console.log (error);
+			console.log ('CMD:stdout');
 			console.log (stdout);
+			console.log ('CMD:stderr');
 			console.log (stderr);
 		});
 	};
+	
 	const checkFunc = async function () {
 		try {
 			const content = await fetchCustom (checkAuthUrl);
