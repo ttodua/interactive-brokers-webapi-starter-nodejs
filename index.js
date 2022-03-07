@@ -1,12 +1,15 @@
+const os = require ('os');
+const fs = require ('fs');
+const path = require ('path');
+const fetch = require('node-fetch');
+const AdmZip = require('adm-zip');
 
-async loadIbLocalhost (forceDownload = false) {
+async function loadIbLocalhost (params = {}) {
+	const forceDownload = params.forceDownload || false;
+	const defaultUrl    = params.defaultUrl || 'https://download2.interactivebrokers.com/portal/clientportal.gw.zip';
+	const showMessages  = params.showMessages || false;
 	// https://interactivebrokers.github.io/cpwebapi/
 	// At first, download gateway files
-	const os = require ('os');
-	const fs = require ('fs');
-	const path = require ('path');
-	const fetch = require('node-fetch');
-	const AdmZip = require('adm-zip');
 	const tempDir = os.tmpdir ();
 	const ibkrGatewayDir = path.resolve (tempDir + '/ibrk_cpwa_gateway/');
 	const dirExists = fs.existsSync (ibkrGatewayDir);
@@ -14,7 +17,7 @@ async loadIbLocalhost (forceDownload = false) {
 		if (!dirExists) {
 			fs.mkdirSync (ibkrGatewayDir);
 		}
-		const ibrkGatewayZipUrl = 'https://download2.interactivebrokers.com/portal/clientportal.gw.zip';
+		const ibrkGatewayZipUrl = defaultUrl;
 		const ibkrGatewayZipPath = tempDir + '/ib_cpwa_gateway.zip';
 		// download
 		const res = await fetch (ibrkGatewayZipUrl);
@@ -109,4 +112,4 @@ async loadIbLocalhost (forceDownload = false) {
 	setInterval (checkFunc, 1000 * interval);
 }
 
-loadIbLocalhost();
+module.exports = loadIbLocalhost;
