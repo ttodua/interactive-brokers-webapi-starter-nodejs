@@ -1,0 +1,19 @@
+{
+  "name": "ibkr-webapi-bridge",
+  "version": "1.0.0",
+  "description": "interactive-brokers-webapi-nodejs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ttodua/interactive-brokers-webapi-starter-nodejs.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ttodua/interactive-brokers-webapi-starter-nodejs/issues"
+  },
+  "homepage": "https://github.com/ttodua/interactive-brokers-webapi-starter-nodejs#readme"
+}
