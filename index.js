@@ -4,21 +4,34 @@ const path = require ('path');
 const fetch = require('node-fetch');
 const AdmZip = require('adm-zip');
 
+const log = function (txt) {
+	console.log ('• [IBKR Localserver] ' + ((new Date ()).toISOString ()) + ' ::: ' + txt);
+};
+
 async function loadIbLocalhost (params = {}) {
-	const forceDownload = params.forceDownload || false;
+	let forceDownload = params.forceDownload || false;
 	const defaultUrl    = params.defaultUrl || 'https://download2.interactivebrokers.com/portal/clientportal.gw.zip';
 	const showMessages  = params.showMessages || false;
+	const redownloadDays  = 7;
 	// https://interactivebrokers.github.io/cpwebapi/
 	// At first, download gateway files
 	const tempDir = os.tmpdir ();
 	const ibkrGatewayDir = path.resolve (tempDir + '/ibrk_cpwa_gateway/');
+	const ibkrGatewayZipPath = tempDir + '/ib_cpwa_gateway.zip';
 	const dirExists = fs.existsSync (ibkrGatewayDir);
+	const fileExists = fs.existsSync (ibkrGatewayZipPath);
+	if (fileExists) {
+		const stats = fs.statSync(ibkrGatewayZipPath);
+		if (stats.mtime.getTime() < (new Date).getTime() - redownloadDays*24*60*60*1000 ) {
+			log(redownloadDays + " days passed after last IBRK gateway download. Redownloading now again");
+			forceDownload = true;
+		}
+	}
 	if (!dirExists || forceDownload) {
 		if (!dirExists) {
 			fs.mkdirSync (ibkrGatewayDir);
 		}
 		const ibrkGatewayZipUrl = defaultUrl;
-		const ibkrGatewayZipPath = tempDir + '/ib_cpwa_gateway.zip';
 		// download
 		const res = await fetch (ibrkGatewayZipUrl);
 		const fileStream = fs.createWriteStream (ibkrGatewayZipPath);
@@ -38,9 +51,6 @@ async function loadIbLocalhost (params = {}) {
 	const success_text = 'Client login succeeds';
 	const connection_refusal_text = 'connect ECONNREFUSED 127.0.0.1:5000';
 	const interval = 60;
-	const log = function (txt) {
-		console.log ('• [IBKR Localserver] ' + ((new Date ()).toISOString ()) + ' ::: ' + txt);
-	};
 	const fetchCustom = async function (url) {
 		return new Promise ((resolve, reject) => {
 			try {
@@ -69,7 +79,7 @@ async function loadIbLocalhost (params = {}) {
 		let cmd = '';
 		const path = ibkrGatewayDir;
 		if (process.platform === 'win32') {
-			cmd = '"' + path + '\\bin\\run.bat" "' + path + '\\root\\conf.yaml"';
+			cmd = 'cd "'+path+'" && bin\\run.bat root\\conf.yaml';
 		} else {
 			cmd = '';
 		}
@@ -112,4 +122,6 @@ async function loadIbLocalhost (params = {}) {
 	setInterval (checkFunc, 1000 * interval);
 }
 
-module.exports = loadIbLocalhost;
+module.exports = {
+	serve : loadIbLocalhost
+};
