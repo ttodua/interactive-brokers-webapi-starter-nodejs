@@ -47,35 +47,15 @@ async function loadIbLocalhost (params = {}) {
 	const https = require ('https');
 	const cp = require ('child_process');
 	const baseUrl = 'https://localhost:5000';
-	const checkAuthUrl = baseUrl + '/sso/Dispatcher';
-	const success_text = 'Client login succeeds';
-	const connection_refusal_text = 'connect ECONNREFUSED 127.0.0.1:5000';
+	const verificationUrls = {
+		'dispatcher': { 'url': baseUrl + '/sso/Dispatcher', 'method': 'GET', 'success_text':'Client login succeeds'},
+		'tickle'	: { 'url': baseUrl + '/v1/api/tickle', 'method': 'POST', 'success_text':'"ssoExpires"'},
+		'validate'	: { 'url': baseUrl + '/v1/portal/sso/validate', 'method': 'POST', 'success_text':'"ssoExpires"'},
+		'chosen'    : 'tickle' // tickle or dispatcher
+	};': 1, // uncodumented: extend active session ( stated here: https://interactivebrokers.github.io/cpwebapi/ )
 	const interval = 60;
-	
-	const fetchCustom = async function (url) {
-		return new Promise ((resolve, reject) => {
-			try {
-				https.get (url, { 'agent': new https.Agent ({ 'rejectUnauthorized': false }) }, (res) => {
-					let body = '';
-					res.setEncoding ('utf8');
-					res.on ('data', (data) => {
-						body += data;
-					});
-					res.on ('end', () => resolve (body));
-					res.on ('error', (e) => {
-						// console.log(5);
-						reject (e);
-					});
-				}).on ('error', (ex) => {
-					// console.log(6);
-					reject (ex);
-				});
-			} catch (ex) {
-				// console.log(8);
-				reject (ex);
-			}
-		}); // .catch( function(ex) { console.log(ex); });
-	};
+	const connection_refusal_text = 'connect ECONNREFUSED';
+	const sslDisabledAgent = new https.Agent ({ 'rejectUnauthorized': false });
 	
 	const start_server = async function () {
 		let cmd = '';
@@ -98,29 +78,28 @@ async function loadIbLocalhost (params = {}) {
 	
 	const checkFunc = async function () {
 		try {
-			const content = await fetchCustom (checkAuthUrl);
-			try {
-				const text = content;
-				if (text === success_text) {
-					log ('authstatus ping ok');
-				} else {
-					log ('authstatus status (' + text + '; Please authorize yourself at: ' + baseUrl);
-				}
-			} catch (ex) {
-				console.log (ex);
+			const chosenEndpoint = verificationUrls [verificationUrls['chosen']];
+			const content = await fetch (chosenEndpoint['url'],  {agent: sslDisabledAgent, method: chosenEndpoint['method']}); 
+			const compareTextTo = chosenEndpoint['success_text']; 
+			const text = await content.text();
+			if (text.indexOf(compareTextTo)>-1) {
+				log ('authstatus ping ok');
+			} else {
+				log ('authstatus fail (' + text + '); Please authorize yourself at: ' + baseUrl);
 			}
 		} catch (ex) {
 			try {
 				const msg = ex.message;
-				if (msg === connection_refusal_text) {
-					log ('Error: connection refused, server will be restarted now. ');
+				if (msg.indexOf(connection_refusal_text)>-1) {
+					log ('Error 1: connection refused, server will be restarted now. ');
 					await start_server ();
 					setTimeout (checkFunc, 3000);
 				} else {
-					log ('Error: ' + msg);
+					log ('Error 2: ' + msg);
 				}
 			} catch (ex) {
-				console.log (ex);
+				const msg = ex.message;
+				console.log ('Error 3: ' + msg);
 			}
 		}
 	};
